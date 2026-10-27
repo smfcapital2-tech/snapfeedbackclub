@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snapchat Survey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFFC00;
+    --ink: #16161A;
+    --paper: #FFFFFF;
+    --mist: #F3F3EE;
+    --line: #DCDCD2;
+    --muted: #5E5E66;
+    --error: #C4161C;
+    --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--yellow);
+    min-height: 100vh;
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  [hidden] { display: none !important; }
+
+  h1, h2 { font-family: var(--display); margin: 0; letter-spacing: -0.02em; line-height: 1.02; }
+  h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); font-weight: 800; }
+  h2 { font-size: 1.5rem; font-weight: 800; }
+
+  .screen { max-width: 640px; margin: 0 auto; padding: 56px 20px 72px; }
+
+  /* Gate */
+  .gate-logo { display: block; width: 112px; height: auto; margin-bottom: 24px; border: 2px solid var(--ink); border-radius: 12px; }
+  .gate p.lead { font-size: 1.15rem; margin: 18px 0 32px; max-width: 30ch; }
+  .gate form { background: var(--ink); color: var(--paper); padding: 24px; border-radius: 18px; }
+  .gate label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .gate input[type=email] { background: var(--paper); }
+
+  /* Survey */
+  .survey-wrap { background: var(--paper); min-height: 100vh; }
+  .survey-head { background: var(--yellow); padding: 40px 20px 28px; }
+  .survey-head .inner { max-width: 640px; margin: 0 auto; }
+  .survey-head p { margin: 10px 0 0; color: var(--ink); }
+  .who { display: inline-block; margin-top: 12px; font-weight: 600; background: var(--ink); color: var(--yellow); padding: 4px 12px; border-radius: 99px; font-size: .9rem; word-break: break-all; }
+
+  .progress { position: sticky; top: 0; z-index: 5; height: 6px; background: var(--line); }
+  .progress > div { height: 100%; width: 0; background: var(--ink); transition: width .25s ease; }
+
+  .survey { max-width: 640px; margin: 0 auto; padding: 8px 20px 80px; }
+  fieldset { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 28px 0 8px; min-width: 0; }
+  fieldset:first-of-type { border-top: 0; }
+  legend { padding: 0; font-weight: 600; font-size: 1.1rem; line-height: 1.35; margin-bottom: 14px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .opt { position: relative; }
+  .opt input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .opt span {
+    display: block; padding: 10px 16px; border: 2px solid var(--line); border-radius: 12px;
+    background: var(--paper); transition: background .12s, border-color .12s;
+  }
+  .opt input:hover + span { border-color: var(--ink); }
+  .opt input:checked + span { background: var(--yellow); border-color: var(--ink); font-weight: 600; }
+  .opt input:focus-visible + span { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .scale { display: flex; gap: 10px; align-items: center; }
+  .scale .opt span { width: 52px; text-align: center; padding: 10px 0; }
+  .scale small { color: var(--muted); font-size: .85rem; }
+
+  input[type=text], input[type=email], textarea {
+    width: 100%; font: inherit; color: var(--ink); padding: 13px 14px;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--paper);
+  }
+  input[type=text]:focus, input[type=email]:focus, textarea:focus { outline: 3px solid var(--ink); outline-offset: 1px; border-color: var(--ink); }
+  textarea { resize: vertical; min-height: 84px; }
+
+  .handle-box { background: var(--mist); border-radius: 18px; padding: 22px; margin-top: 24px; border-top: 0 !important; }
+  .handle-box legend { font-family: var(--display); font-weight: 800; font-size: 1.4rem; }
+  .handle-wrap { position: relative; }
+  .handle-wrap .at { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; pointer-events: none; }
+  .handle-wrap input { padding-left: 34px; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 8px 0 0; }
+
+  .err { color: var(--error); font-size: .92rem; font-weight: 500; margin: 8px 0 0; min-height: 0; }
+  .invalid .opt span, .invalid input[type=text], .invalid textarea { border-color: var(--error); }
+
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 14px;
+    padding: 15px 26px; background: var(--yellow); color: var(--ink);
+  }
+  .gate button { margin-top: 18px; width: 100%; }
+  .submit { margin-top: 28px; width: 100%; background: var(--ink); color: var(--yellow); font-size: 1.05rem; }
+  button:hover:not(:disabled) { filter: brightness(.94); }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .gate button:focus-visible { outline-color: var(--paper); }
+  button:disabled { opacity: .6; cursor: progress; }
+
+  .notice { font-size: .88rem; color: var(--muted); margin-top: 14px; }
+  .gate .notice { color: #C9C9CE; }
+  .banner { background: #FDECEC; border: 2px solid var(--error); color: var(--error); padding: 12px 14px; border-radius: 12px; margin-top: 18px; font-weight: 500; }
+
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .thanks { text-align: left; }
+  .thanks p { font-size: 1.15rem; max-width: 34ch; margin: 18px 0 0; }
+  .thanks .share-button { margin-top: 24px; }
+  .thanks .share-status { margin-top: 12px; font-size: .95rem; }
+</style>
+</head>
+<body>
+
+<!-- 1. Gmail gate -->
+<main id="gate" class="screen gate">
+  <img class="gate-logo" src="snapchat-logo.png" alt="Snapchat logo">
+  <h1>Snap<br>survey.</h1>
+  <p class="lead">Ten quick questions about how you use Snapchat. Enter your Gmail to start.</p>
+  <form id="gateForm" novalidate>
+    <label for="gmail">Your Gmail address</label>
+    <input id="gmail" type="email" inputmode="email" autocomplete="email" placeholder="name@gmail.com" required>
+    <p class="err" id="gmailErr" role="alert"></p>
+    <button type="submit">Start the survey</button>
+    <p class="notice">Only your email address is needed. Never enter your password. Your email and Snap handle are used for this survey only.</p>
+  </form>
+</main>
+
+<!-- 2. Survey -->
+<div id="surveyWrap" class="survey-wrap" hidden>
+  <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+  <header class="survey-head">
+    <div class="inner">
+      <h2>Tell us about your Snapping</h2>
+      <p>Answer everything, then add your Snap handle at the bottom.</p>
+      <span class="who" id="who"></span>
+    </div>
+  </header>
+
+  <form id="survey" class="survey" novalidate>
+    <div class="hp" aria-hidden="true">
+      <label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+    </div>
+    <div id="questions"></div>
+
+    <fieldset class="handle-box" id="q-handle">
+      <legend><label for="handle">Your Snap handle</label></legend>
+      <div class="handle-wrap">
+        <span class="at" aria-hidden="true">@</span>
+        <input id="handle" name="snap_handle" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="yourhandle" maxlength="15">
+      </div>
+      <p class="hint">3 to 15 characters: letters, numbers, dots, dashes and underscores. Don't include the @.</p>
+      <p class="err" id="handleErr" role="alert"></p>
+    </fieldset>
+
+    <div id="banner" class="banner" role="alert" hidden></div>
+    <button type="submit" class="submit" id="submitBtn">Send my answers</button>
+  </form>
+</div>
+
+<!-- 3. Thank you -->
+<main id="thanks" class="screen thanks" hidden>
+  <img class="gate-logo" src="snapchat-logo.png" alt="Snapchat logo">
+  <h1>Sent.</h1>
+  <p>Thanks for answering. We got your responses and your Snap handle.</p>
+  <button type="button" class="share-button" id="shareButton">Share this survey</button>
+  <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
+</main>
+
+<script>
+  // ====== CONFIG ======
+  const FORMSPREE_URL = "https://formspree.io/f/xanpppwq";
+
+  // ====== QUESTIONS ======
+  const QUESTIONS = [
+    { id: "open_frequency", type: "choice", text: "How often do you open Snapchat?",
+      options: ["Many times a day", "A few times a day", "Once a day", "A few times a week", "Rarely"] },
+    { id: "streak_length", type: "choice", text: "How long is your longest active streak?",
+      options: ["No streaks", "Under 30 days", "30 to 100 days", "100 to 365 days", "Over a year"] },
+    { id: "favorite_feature", type: "choice", text: "Which Snapchat feature do you use the most?",
+      options: ["Snaps", "Chat", "Stories", "Spotlight", "Snap Map", "Lenses and filters"] },
+    { id: "snap_score_importance", type: "scale", text: "How much do you care about your Snap Score?",
+      low: "Not at all", high: "A lot" },
+    { id: "snap_most", type: "choice", text: "Who do you Snap the most?",
+      options: ["Close friends", "Family", "My partner", "Group chats", "Creators and brands"] },
+    { id: "snap_or_chat", type: "choice", text: "When you message someone, you usually send a...",
+      options: ["Photo or video Snap", "Text chat", "Both equally"] },
+    { id: "first_app", type: "choice", text: "Which app do you open first in the morning?",
+      options: ["Snapchat", "Instagram", "TikTok", "WhatsApp", "Something else"] },
+    { id: "favorite_lens", type: "text", text: "What's your favorite lens or filter, and why?",
+      placeholder: "Dog ears, because..." },
+    { id: "streak_excuse", type: "text", text: "What's the best excuse you've used to save a streak?",
+      placeholder: "My phone died at 11:59..." },
+    { id: "overall_rating", type: "scale", text: "Overall, how would you rate Snapchat?",
+      low: "Poor", high: "Great" }
+  ];
+
+  const $ = (s) => document.querySelector(s);
+  const state = { email: "" };
+
+  // ====== SHARE SURVEY ======
+  $("#shareButton").addEventListener("click", async () => {
+    const status = $("#shareStatus");
+    if (window.location.protocol === "file:") {
+      status.textContent = "This survey needs to be published online before its link can be shared.";
+      return;
+    }
+
+    const shareData = {
+      title: "Snapchat Survey",
+      text: "Take this quick Snapchat survey:",
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        status.textContent = "Thanks for sharing!";
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        status.textContent = "Survey link copied. Share it with your friends!";
+      }
+    } catch (err) {
+      if (err.name === "AbortError") {
+        status.textContent = "Sharing cancelled.";
+      } else {
+        status.textContent = "Couldn't share the link. Please copy it from your browser's address bar.";
+      }
+    }
+  });
+
+  // ====== GATE ======
+  const GMAIL_RE = /^[A-Za-z0-9._%+\-]+@gmail\.com$/i;
+
+  $("#gateForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("#gmail").value.trim();
+    const err = $("#gmailErr");
+    if (!v) { err.textContent = "Enter your Gmail address to continue."; return; }
+    if (!GMAIL_RE.test(v)) { err.textContent = "Use a Gmail address that ends in @gmail.com."; return; }
+    err.textContent = "";
+    state.email = v;
+    $("#who").textContent = v;
+    $("#gate").hidden = true;
+    $("#surveyWrap").hidden = false;
+    window.scrollTo(0, 0);
+    updateProgress();
+  });
+
+  // ====== BUILD SURVEY ======
+  function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  function buildQuestions() {
+    const html = QUESTIONS.map((q, i) => {
+      let body = "";
+      if (q.type === "choice") {
+        body = `<div class="opts">` + q.options.map((o, j) =>
+          `<label class="opt"><input type="radio" name="${q.id}" value="${esc(o)}"><span>${esc(o)}</span></label>`
+        ).join("") + `</div>`;
+      } else if (q.type === "scale") {
+        body = `<div class="scale"><small>${esc(q.low)}</small>` +
+          [1, 2, 3, 4, 5].map(n =>
+            `<label class="opt"><input type="radio" name="${q.id}" value="${n}"><span>${n}</span></label>`
+          ).join("") + `<small>${esc(q.high)}</small></div>`;
+      } else {
+        body = `<textarea name="${q.id}" maxlength="300" placeholder="${esc(q.placeholder || "")}" aria-label="${esc(q.text)}"></textarea>`;
+      }
+      return `<fieldset id="q-${q.id}"><legend>${i + 1}. ${esc(q.text)}</legend>${body}<p class="err" role="alert"></p></fieldset>`;
+    }).join("");
+    $("#questions").innerHTML = html;
+  }
+  buildQuestions();
+
+  // ====== PROGRESS ======
+  function answeredCount() {
+    let n = 0;
+    QUESTIONS.forEach(q => {
+      if (q.type === "text") { if (document.querySelector(`[name="${q.id}"]`).value.trim()) n++; }
+      else if (document.querySelector(`[name="${q.id}"]:checked`)) n++;
+    });
+    if ($("#handle").value.trim()) n++;
+    return n;
+  }
+  function updateProgress() {
+    $("#bar").style.width = (answeredCount() / (QUESTIONS.length + 1) * 100) + "%";
+  }
+  $("#survey").addEventListener("input", updateProgress);
+  $("#survey").addEventListener("change", updateProgress);
+
+  // ====== VALIDATION ======
+  const HANDLE_RE = /^[A-Za-z0-9._\-]{3,15}$/;
+
+  function validate() {
+    let firstBad = null;
+    const mark = (el, msg) => {
+      const err = el.querySelector(".err");
+      err.textContent = msg || "";
+      el.classList.toggle("invalid", !!msg);
+      if (msg && !firstBad) firstBad = el;
+    };
+    QUESTIONS.forEach(q => {
+      const el = $("#q-" + q.id);
+      const filled = q.type === "text"
+        ? el.querySelector("textarea").value.trim()
+        : el.querySelector("input:checked");
+      mark(el, filled ? "" : (q.type === "text" ? "Write a short answer." : "Pick one option."));
+    });
+    const h = $("#handle").value.trim().replace(/^@/, "");
+    $("#handle").value = h;
+    const hEl = $("#q-handle");
+    let hMsg = "";
+    if (!h) hMsg = "Add your Snap handle.";
+    else if (!HANDLE_RE.test(h)) hMsg = "Use 3 to 15 characters: letters, numbers, dots, dashes or underscores.";
+    hEl.querySelector(".err").textContent = hMsg;
+    hEl.classList.toggle("invalid", !!hMsg);
+    if (hMsg && !firstBad) firstBad = hEl;
+    return firstBad;
+  }
+
+  // ====== SUBMIT ======
+  $("#survey").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const banner = $("#banner");
+    banner.hidden = true;
+
+    const bad = validate();
+    if (bad) { bad.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+
+    const fd = new FormData($("#survey"));
+    const payload = { email: state.email, _subject: "New Snapchat survey response" };
+    QUESTIONS.forEach(q => { payload[q.text] = (fd.get(q.id) || "").toString().trim(); });
+    payload["Snap handle"] = "@" + fd.get("snap_handle").toString().trim();
+    payload["_gotcha"] = (fd.get("_gotcha") || "").toString();
+
+    const btn = $("#submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    try {
+      const res = await fetch(FORMSPREE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        let detail = "";
+        try { const j = await res.json(); if (j.errors) detail = " " + j.errors.map(x => x.message).join(" "); } catch (_) {}
+        throw new Error("Server responded with " + res.status + "." + detail);
+      }
+      $("#surveyWrap").hidden = true;
+      $("#thanks").hidden = false;
+      window.scrollTo(0, 0);
+    } catch (err) {
+      banner.textContent = "Your answers didn't send. Check your connection and try again. (" + err.message + ")";
+      banner.hidden = false;
+      btn.disabled = false;
+      btn.textContent = "Try again";
+    }
+  });
+</script>
+</body>
+</html>
